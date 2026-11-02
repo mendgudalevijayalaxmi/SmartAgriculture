@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: smart-agriculture-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: smart-agriculture-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: smart-agriculture-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: smart-agriculture-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: smart-agriculture-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: smart-agriculture-db
+          property: password
+
+databases:
+  - name: smart-agriculture-db
+    databaseName: smart_agriculture
+    user: smartagri
+    plan: free
+    region: singapore
+    postgresMajorVersion: "17"
