@@ -1,6 +1,20 @@
 # Compiled Java files
 *.class
-bin/
+.mvn/wrapper/maven-wrapper.jar
 
-# IDE temporary files
+# Maven
+/target/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
 .metadata/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
