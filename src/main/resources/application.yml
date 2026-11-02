@@ -1,10 +1,12 @@
 spring:
   application:
     name: smart-agriculture
+  profiles:
+    default: local
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:smart_agriculture}
-    username: ${DB_USERNAME:smartagri}
-    password: ${DB_PASSWORD:local-only-password}
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     open-in-view: false
     hibernate:

@@ -3,10 +3,12 @@ package com.smartagriculture.crop;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +109,42 @@ class CropApiIntegrationTest {
                 HttpResponse.BodyHandlers.ofString());
         assertEquals(404, missing.statusCode());
         assertTrue(missing.body().contains("was not found"));
+    }
+
+    @Test
+    void searchesByNameAndSeasonWithBoundedPagination() throws Exception {
+        cropRepository.saveAll(List.of(
+                new Crop("Maize", "Hybrid", CropSeason.KHARIF, "Loamy", new BigDecimal("5200.00"), null),
+                new Crop("Mango", "Alphonso", CropSeason.PERENNIAL, "Laterite", null, null),
+                new Crop("Wheat", "HD-2967", CropSeason.RABI, "Loamy", new BigDecimal("4800.00"), null)));
+
+        HttpResponse<String> filtered = httpClient.send(
+                HttpRequest.newBuilder(uri("/api/v1/crops/search?name=ma&season=KHARIF&page=0&size=1"))
+                        .GET()
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, filtered.statusCode());
+        assertTrue(filtered.body().contains("\"name\":\"Maize\""));
+        assertTrue(filtered.body().contains("\"totalElements\":1"));
+
+        HttpResponse<String> paginated = httpClient.send(
+                HttpRequest.newBuilder(uri("/api/v1/crops/search?page=0&size=2"))
+                        .GET()
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, paginated.statusCode());
+        assertTrue(paginated.body().contains("\"size\":2"));
+        assertTrue(paginated.body().contains("\"totalElements\":3"));
+        assertTrue(paginated.body().contains("\"totalPages\":2"));
+        assertTrue(paginated.body().contains("\"hasNext\":true"));
+
+        HttpResponse<String> invalidSize = httpClient.send(
+                HttpRequest.newBuilder(uri("/api/v1/crops/search?size=101"))
+                        .GET()
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(400, invalidSize.statusCode());
+        assertTrue(invalidSize.body().contains("Invalid crop search parameters"));
     }
 
     private URI uri(String path) {

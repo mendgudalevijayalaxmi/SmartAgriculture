@@ -32,9 +32,12 @@ The API listens on `http://localhost:8080`. The local Compose credentials are fo
 
 The database connection can be configured with `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD`. Defaults are intended only for the local Compose setup.
 
+The default local profile uses development-only Compose credentials from `application-local.yml`. Render activates the `production` profile, where the shared configuration requires every database connection variable to be supplied externally.
+
 ## API
 
 - `GET /api/v1/crops` — list crops
+- `GET /api/v1/crops/search?name=man&season=PERENNIAL&page=0&size=20` — filter by a partial crop name and/or season with zero-based pagination (page size: 1–100)
 - `GET /api/v1/crops/{id}` — get one crop
 - `POST /api/v1/crops` — create a crop
 - `PUT /api/v1/crops/{id}` — replace a crop
@@ -51,6 +54,10 @@ curl -X POST http://localhost:8080/api/v1/crops \
 
 `season` accepts `KHARIF`, `RABI`, `ZAID`, or `PERENNIAL`. Invalid input returns HTTP 400 with field-level validation details. Missing crop IDs return HTTP 404.
 
+The paginated search response includes `content`, `page`, `size`, `totalElements`, `totalPages`, and `hasNext`. The original list endpoint remains available for compatibility.
+
+The demo API does not currently require authentication. Do not use it for private or production farm data; see the [production-readiness review](docs/PRODUCTION_READINESS.md).
+
 ## Test
 
 ```sh
@@ -64,5 +71,7 @@ The integration tests start the application against a fresh H2 database and run 
 The repository includes a `Dockerfile` and `render.yaml` Blueprint. Connect this repository to Render as a Blueprint and apply the configuration to create the API and PostgreSQL database in Singapore. The Docker build runs `mvn verify`; Render uses `/actuator/health` as the service health check. Database connection values are provided by Render and are not stored in the repository.
 
 The Blueprint currently selects Render's **free** plans for a demo. Free web services spin down after 15 minutes without traffic and can take about a minute to wake. Free PostgreSQL has a 1 GB limit, no backups, and expires 30 days after creation; after a further 14-day grace period, Render deletes the database and its data. Do not store important or production data on this configuration. For production, select paid plans and confirm current pricing in Render before creating resources.
+
+The current demo is connected to the public `feature/spring-boot-crop-api` branch, so commits do not automatically deploy. Use Render's manual Blueprint sync for demo changes; for production, merge to protected `main` and connect the Git provider if automatic deployments are required.
 
 See [Render's free instance limitations](https://render.com/docs/free) and [Blueprint documentation](https://render.com/docs/blueprint-spec) for current platform details.
