@@ -1,7 +1,12 @@
 package com.smartagriculture.crop;
 
 import java.util.List;
+import java.util.Locale;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +26,38 @@ public class CropService {
                 .stream()
                 .map(CropResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CropResponse> search(String name, CropSeason season, int page, int size) {
+        if (page < 0) {
+            throw new InvalidCropSearchException("page must be zero or greater");
+        }
+        if (size < 1 || size > 100) {
+            throw new InvalidCropSearchException("size must be between 1 and 100");
+        }
+
+        String filter = name == null ? null : name.trim();
+        if (filter != null && filter.length() > 100) {
+            throw new InvalidCropSearchException("name must be 100 characters or fewer");
+        }
+
+        Specification<Crop> specification = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
+        if (filter != null && !filter.isBlank()) {
+            String pattern = "%" + escapeLike(filter.toLowerCase(Locale.ROOT)) + "%";
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern, '\\'));
+        }
+        if (season != null) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("season"), season));
+        }
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Order.asc("name"), Sort.Order.asc("id")));
+        return cropRepository.findAll(specification, pageable).map(CropResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +94,12 @@ public class CropService {
 
     private Crop findCrop(Long id) {
         return cropRepository.findById(id).orElseThrow(() -> new CropNotFoundException(id));
+    }
+
+    private String escapeLike(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     private String clean(String value) {

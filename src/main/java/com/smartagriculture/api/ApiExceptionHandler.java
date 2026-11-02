@@ -1,12 +1,14 @@
 package com.smartagriculture.api;
 
 import com.smartagriculture.crop.CropNotFoundException;
+import com.smartagriculture.crop.InvalidCropSearchException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.TreeMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -24,6 +26,16 @@ public class ApiExceptionHandler {
         exception.getBindingResult().getFieldErrors().forEach(error ->
                 fieldErrors.putIfAbsent(error.getField(), error.getDefaultMessage()));
         return response(HttpStatus.BAD_REQUEST, "Request validation failed", fieldErrors);
+    }
+
+    @ExceptionHandler(InvalidCropSearchException.class)
+    public ResponseEntity<ApiError> handleInvalidSearch(InvalidCropSearchException exception) {
+        return response(HttpStatus.BAD_REQUEST, "Invalid crop search parameters", Map.of("query", exception.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleInvalidParameter(MethodArgumentTypeMismatchException exception) {
+        return response(HttpStatus.BAD_REQUEST, "Invalid request parameter", Map.of(exception.getName(), "Value is invalid"));
     }
 
     private ResponseEntity<ApiError> response(

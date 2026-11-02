@@ -9,6 +9,8 @@ services:
     healthCheckPath: /actuator/health
     autoDeployTrigger: commit
     envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
       - key: DB_HOST
         fromDatabase:
           name: smart-agriculture-db
