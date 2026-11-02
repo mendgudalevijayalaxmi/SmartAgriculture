@@ -1,0 +1,6 @@
+# Compiled Java files
+*.class
+bin/
+
+# IDE temporary files
+.metadata/
