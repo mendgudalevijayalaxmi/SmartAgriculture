@@ -58,3 +58,11 @@ mvn test
 ```
 
 The integration tests start the application against a fresh H2 database and run the same Flyway schema migration used by PostgreSQL.
+
+## Deploy to Render
+
+The repository includes a `Dockerfile` and `render.yaml` Blueprint. Connect this repository to Render as a Blueprint and apply the configuration to create the API and PostgreSQL database in Singapore. The Docker build runs `mvn verify`; Render uses `/actuator/health` as the service health check. Database connection values are provided by Render and are not stored in the repository.
+
+The Blueprint currently selects Render's **free** plans for a demo. Free web services spin down after 15 minutes without traffic and can take about a minute to wake. Free PostgreSQL has a 1 GB limit, no backups, and expires 30 days after creation; after a further 14-day grace period, Render deletes the database and its data. Do not store important or production data on this configuration. For production, select paid plans and confirm current pricing in Render before creating resources.
+
+See [Render's free instance limitations](https://render.com/docs/free) and [Blueprint documentation](https://render.com/docs/blueprint-spec) for current platform details.
